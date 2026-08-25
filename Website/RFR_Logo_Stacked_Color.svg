@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="300" viewBox="0 0 540 300">
+
+    <g transform="translate(150,12) scale(.62)">
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      
+      <path d="M82 52 L82 34 Q82 28 88 28 H139 Q145 28 145 34 V52" fill="#2E7D32" stroke="#1F2328" stroke-width="9" stroke-linejoin="round"/>
+      <path d="M52 67 L52 45 Q52 39 58 39 H111 Q117 39 117 45 V67" fill="#F47A20" stroke="#1F2328" stroke-width="9" stroke-linejoin="round"/>
+    
+      <path d="M38 67 H202 L188 92 H52 Z" fill="white" stroke="#1F2328" stroke-width="10"/>
+      <path d="M52 92 H188 L177 163 Q176 170 168 170 H72 Q64 170 63 163 Z" fill="white" stroke="#1F2328" stroke-width="10"/>
+      <rect x="98" y="112" width="44" height="16" rx="8" fill="#1F2328" stroke="none"/>
+    </g></g>
+    <text x="270" y="168" text-anchor="middle" fill="#1F2328" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="800">RAW FILE</text>
+    <text x="270" y="220" text-anchor="middle" fill="#1F2328" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="800">RESCUE</text>
+    <text x="270" y="255" text-anchor="middle" fill="#1F2328" font-family="Arial, Helvetica, sans-serif" font-size="14">
+      From strangely named files and messy paper piles
+    </text>
+    <text x="270" y="277" text-anchor="middle" fill="#1F2328" font-family="Arial, Helvetica, sans-serif" font-size="14">
+      to an <tspan fill="#2E7D32" font-weight="700">organized digital archive.</tspan>
+    </text>
+</svg>
