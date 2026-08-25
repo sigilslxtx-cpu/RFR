@@ -176,5 +176,25 @@
     <div><h4>Explore</h4><ul><li><a href="#before-after">Before &amp; After</a></li><li><a href="#examples">Real Examples</a></li><li><a href="#diy-file-rescue">DIY File Rescue</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#how-it-works">How It Works</a></li><li><a href="#refund-policy">Refund Policy</a></li><li><a href="#privacy-policy">Privacy &amp; Data Handling</a></li><li><a href="#service-terms">Service Terms</a></li></ul></div>
     <div><h4>Contact</h4><div class="footer-contact"><a href="tel:+15126668138">☎ (512) 666-8138</a><a href="https://forms.gle/fxnZCUkCnUU1hTPM6" target="_blank" rel="noopener noreferrer">Online inquiry form</a><span>● Austin, TX</span><span>Local and remote services depending on the project.</span></div></div>
   </div><div class="footer-bottom"><span>© 2026 Raw File Rescue. All rights reserved.</span><span>Austin, Texas</span></div></div></footer>
+  <script>
+  document.querySelectorAll("img").forEach(function (image) {
+    if (image.closest("a")) {
+      const link = image.closest("a");
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    } else {
+      const link = document.createElement("a");
+      link.href = image.src;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.setAttribute("aria-label", image.alt
+        ? "Open " + image.alt + " in a new tab"
+        : "Open image in a new tab");
+
+      image.parentNode.insertBefore(link, image);
+      link.appendChild(image);
+    }
+  });
+</script>
 </body>
 </html>
