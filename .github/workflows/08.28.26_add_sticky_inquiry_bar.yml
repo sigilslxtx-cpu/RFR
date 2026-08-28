@@ -1,0 +1,46 @@
+name: 08.28.26 Add Sticky Inquiry Bar
+on:
+  push:
+    paths:
+      - '.github/workflows/08.28.26_add_sticky_inquiry_bar.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install beautifulsoup4
+      - name: Add sticky inquiry bar
+        run: |
+          python - <<'PY'
+          from bs4 import BeautifulSoup
+          from pathlib import Path
+          p=Path('index.html')
+          html=p.read_text(encoding='utf-8')
+          soup=BeautifulSoup(html,'html.parser')
+          style=soup.find('style')
+          css='''\n.sticky-inquiry{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(8,43,76,.97);color:#fff;border-top:1px solid rgba(255,255,255,.14);box-shadow:0 -8px 24px rgba(8,43,76,.18);transform:translateY(110%);opacity:0;pointer-events:none;transition:transform .22s ease,opacity .22s ease}.sticky-inquiry.is-visible{transform:translateY(0);opacity:1;pointer-events:auto}.sticky-inquiry-inner{width:min(calc(100% - 40px),var(--max));margin:auto;min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:18px}.sticky-inquiry-copy{font-weight:800}.sticky-inquiry .btn{min-height:42px;background:#fff;color:var(--navy);padding:0 20px;white-space:nowrap}@media(max-width:680px){.sticky-inquiry-inner{width:min(calc(100% - 24px),var(--max));min-height:58px;justify-content:center}.sticky-inquiry-copy{display:none}.sticky-inquiry .btn{width:100%;min-height:44px}}\n'''
+          style.string=(style.string or '')+css
+          bar=soup.new_tag('div',attrs={'class':'sticky-inquiry','id':'sticky-inquiry','aria-hidden':'true'})
+          inner=soup.new_tag('div',attrs={'class':'sticky-inquiry-inner'})
+          copy=soup.new_tag('span',attrs={'class':'sticky-inquiry-copy'}); copy.string='Need help with the backlog?'
+          a=soup.new_tag('a',attrs={'class':'btn','href':'https://forms.gle/fxnZCUkCnUU1hTPM6','target':'_blank','rel':'noopener'}); a.string='Start Your Inquiry'
+          inner.append(copy); inner.append(a); bar.append(inner)
+          soup.body.append(bar)
+          script=soup.new_tag('script')
+          script.string='''(()=>{const bar=document.getElementById("sticky-inquiry");const hero=document.querySelector("section.hero");const contact=document.getElementById("contact");if(!bar||!hero||!contact)return;let heroVisible=true,contactVisible=false;const sync=()=>{const show=!heroVisible&&!contactVisible;bar.classList.toggle("is-visible",show);bar.setAttribute("aria-hidden",show?"false":"true")};new IntersectionObserver(([e])=>{heroVisible=e.isIntersecting;sync()},{threshold:.08}).observe(hero);new IntersectionObserver(([e])=>{contactVisible=e.isIntersecting;sync()},{threshold:.08}).observe(contact);})();'''
+          soup.body.append(script)
+          p.write_text(str(soup),encoding='utf-8')
+          PY
+      - name: Commit update and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git rm .github/workflows/08.28.26_add_sticky_inquiry_bar.yml
+          git commit -m 'Add sticky inquiry shortcut'
+          git push
