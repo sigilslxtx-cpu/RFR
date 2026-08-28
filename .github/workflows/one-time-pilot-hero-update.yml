@@ -1,0 +1,49 @@
+name: One-time pilot hero update
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-time-pilot-hero-update.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update hero and pricing copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+
+          old = '<section class="hero"><div class="container hero-grid"><div><p class="offer">✓ Complimentary consultation—no charge before you approve the written plan and paid work begins</p><h1>'
+          new = '<section class="hero"><div class="container hero-grid"><div><h1>'
+          if old not in s:
+              raise SystemExit('Hero offer text not found')
+          s = s.replace(old, new, 1)
+
+          old = '<p class="hero-copy"><strong>What “pilot” means:</strong> Raw File Rescue is in its introductory phase. Before paid work begins, you’ll see what I’ll do, what you’ll receive, the expected cost, and the safeguards that apply. You stay in control of access and deletion decisions.</p>'
+          new = '<p class="hero-copy"><strong>Our limited-time pilot:</strong> Raw File Rescue is currently accepting the <strong>first 5 qualified inquiries</strong> for its introductory pilot. Before paid work begins, you’ll see what I’ll do, what you’ll receive, the expected cost, and the safeguards that apply. You stay in control of access and deletion decisions.</p>'
+          if old not in s:
+              raise SystemExit('Pilot paragraph not found')
+          s = s.replace(old, new, 1)
+
+          old = '<section class="section" id="pricing"><div class="container pricing"><div><div class="consult">'
+          new = '<section class="section" id="pricing"><div class="container pricing"><div><p class="offer">✓ Complimentary consultation—no charge before you approve the written plan and paid work begins</p><div class="consult">'
+          if old not in s:
+              raise SystemExit('Pricing insertion point not found')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Refine pilot availability and move consultation note"
+          git push
