@@ -1,0 +1,147 @@
+name: 08.28.26 Simplify Pilot Pricing Copy
+on:
+  push:
+    paths:
+      - '.github/workflows/08.28.26_simplify_pilot_pricing_copy.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install beautifulsoup4
+      - name: Simplify customer-facing copy
+        run: |
+          python - <<'PY'
+          from bs4 import BeautifulSoup
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          soup=BeautifulSoup(s,'html.parser')
+
+          hero=soup.select_one('section.hero')
+          offer=hero.select_one('.offer')
+          if offer: offer.string='✓ Complimentary consultation—no charge before you approve the written plan and paid work begins'
+
+          # Remove redundant pilot language outside the single hero explanation.
+          for el in soup.find_all(string=lambda x: isinstance(x,str) and x.strip()=='Complimentary During the Pilot'):
+              el.replace_with('')
+          for el in soup.find_all(string=lambda x: isinstance(x,str) and x.strip()=='Complimentary Pilot Consultation'):
+              el.replace_with('Complimentary Consultation')
+          for el in soup.find_all(string=lambda x: isinstance(x,str) and x.strip()=='Pilot Production Rate'):
+              el.replace_with('Hourly Rate')
+
+          trust=soup.select_one('.trust')
+          if trust:
+              cp=trust.select_one('.control-panel')
+              if cp:
+                  h=cp.find('h3'); q=cp.find('p')
+                  if h: h.string='Owner-operated'
+                  if q: q.string='Customer work is performed by Chris Guittard, owner/operator.'
+
+          # Service recovery wording.
+          services=soup.find('section',id='services')
+          if services:
+              for ptag in services.find_all('p'):
+                  if ptag.string and 'the pilot does not provide forensic recovery' in ptag.string:
+                      ptag.string=ptag.string.replace('the pilot does not provide forensic recovery','Raw File Rescue does not provide forensic recovery')
+
+          pricing=soup.find('section',id='pricing')
+          if pricing:
+              # Tighten rate card language.
+              price_card=pricing.select_one('.price-card')
+              if price_card:
+                  ps=price_card.find_all('p')
+                  if ps:
+                      ps[0].string='$30/hour for approved paid work, billed in 15-minute increments. Billing begins only after you approve the written plan.'
+              pc=pricing.select_one('.pricing-copy')
+              if pc:
+                  pars=pc.find_all('p',recursive=False)
+                  if len(pars)>1:
+                      pars[1].string='The $30/hour rate applies to approved paid work. The initial inquiry, basic fit check, consultation, risk review, and preparation of the written plan are complimentary unless you explicitly authorize a paid assessment.'
+                  # Rewrite no-surprise overages box.
+                  costs=pc.find_all('div',class_='cost')
+                  if costs:
+                      box=costs[0]
+                      bps=box.find_all('p')
+                      if len(bps)>=1:
+                          bps[0].string='Your written plan includes an expected total and a maximum project cost covering paid work, customer-specific travel time, approved travel expenses, and approved outside costs. I calculate the 80% warning point for your specific job and show it in dollars and, when labor is the main cost, approximate hours. I stop for written approval before going over the maximum.'
+                      if len(bps)>=2:
+                          bps[1].string='I also ask before adding an extra on-site trip, a new type of work, a new source of material, a different access method, or another approved expense that was not part of what we agreed.'
+                  # Employer comparison caveat.
+                  if len(costs)>=2:
+                      box=costs[1]
+                      bps=box.find_all('p')
+                      if len(bps)>=2:
+                          p2=bps[1]
+                          p2.clear()
+                          p2.append('That estimate is ')
+                          st=soup.new_tag('strong')
+                          st.string='not including recruiting, equipment, training, supervision, and other business costs.'
+                          p2.append(st)
+
+          # Remove 30-minute trigger anywhere in public page.
+          replacements={
+              'adds more than 30 minutes of paid work beyond what we agreed, or would push the project over the maximum':'would push the project over the maximum',
+              'adds more than 30 minutes of paid work beyond what we agreed, or would push the project over the maximum.':'would push the project over the maximum.'
+          }
+          for node in soup.find_all(string=True):
+              if not isinstance(node,str):
+                  continue
+              new=node
+              for a,b in replacements.items():
+                  new=new.replace(a,b)
+              if new!=node:
+                  node.replace_with(new)
+
+          # Policy summary: simplify scope trigger and pilot repetition.
+          pol=soup.find('section',id='policies')
+          if pol:
+              for node in pol.find_all(string=True):
+                  if not isinstance(node,str): continue
+                  new=node.replace('During the pilot, ','').replace('during the pilot, ','')
+                  if new!=node: node.replace_with(new)
+              st=soup.find(id='service-terms')
+              if st:
+                  ps=st.find_all('p')
+                  if ps:
+                      ps[0].string='Before paid work begins, you receive a written plan showing what I’ll do, what you’ll receive, the expected cost, and the maximum project cost. I ask before adding an extra unplanned trip, a new type of work, a new source of material, a different access method, another approved expense, or anything that would push the project over the maximum. Your written plan also shows the 80% warning point in dollars and, when useful, approximate labor hours.'
+
+          # Contact copy: no scope jargon.
+          contact=soup.find('section',id='contact')
+          if contact:
+              q=contact.select_one('.cta-box > div > p')
+              if q: q.string="That's fine. Tell me what's giving you trouble, and I'll help figure out a practical way to tackle it. You'll see the written plan and estimate before any paid work begins."
+
+          # Certificate wording bold.
+          aff=soup.select_one('.affiliation p')
+          if aff:
+              aff.clear()
+              aff.append('Raw File Rescue is being developed in Austin, Texas, with a measured pilot focused on practical service, clear safeguards, and documented results. ')
+              st=soup.new_tag('strong')
+              st.string='Click the badge to view our Austin Economic Development Business Skills Certificate.'
+              aff.append(st)
+
+          # Footer: use color logo on a white card instead of black/white asset.
+          footer=soup.find('footer')
+          if footer:
+              img=footer.select_one('.footer-logo')
+              if img:
+                  img['src']='assets/brand/08.27.26.v2_RFR_Logo_Horizontal_Color.svg'
+                  parent=img.parent
+                  parent['style']='display:inline-block;background:#fff;padding:10px 14px;border-radius:10px'
+
+          p.write_text(str(soup),encoding='utf-8')
+          PY
+      - name: Commit update and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git rm .github/workflows/08.28.26_simplify_pilot_pricing_copy.yml
+          git commit -m 'Simplify pilot and pricing copy'
+          git push
