@@ -1,0 +1,39 @@
+name: One-time website copy fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-time-copy-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update website copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          replacements = {
+            '<strong>What “pilot” means:</strong> Pilot describes the introductory phase of the service—not experimental handling of customer files. Before paid work begins, you see what I’ll do, what you’ll receive, the expected cost, and the safeguards that apply. You stay in control of access and deletion decisions.': '<strong>What “pilot” means:</strong> Raw File Rescue is in its introductory phase. Before paid work begins, you’ll see what I’ll do, what you’ll receive, the expected cost, and the safeguards that apply. You stay in control of access and deletion decisions.',
+            'I calculate the 80% warning point for your specific job and show it in dollars and, when labor is the main cost, approximate hours.': 'Your written plan shows the 80% point when I’ll advise you that you’re approaching the project maximum. When labor is the main cost, I’ll also show the approximate number of hours.',
+            'Your written plan also shows the 80% warning point in dollars and, when useful, approximate labor hours.': 'Your written plan also shows the 80% point when I’ll advise you that you’re approaching the project maximum, in dollars and, when useful, approximate labor hours.'
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Missing expected text: {old}')
+              s = s.replace(old, new)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Refine pilot and 80 percent advisory copy"
+          git push
