@@ -1,0 +1,40 @@
+name: 08.28.26 Reduce Pilot Repetition
+on:
+  push:
+    paths:
+      - '.github/workflows/08.28.26_reduce_pilot_repetition.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('Paper scanning during the pilot is done on site. I do not take your originals away.','Paper scanning is done on site. <strong>You keep control of your originals.</strong>')
+          s=s.replace('preparation of the written plan are complimentary during the pilot.','preparation of the written plan are complimentary.')
+          # Keep pilot explanation near the top and one closing reference; remove unnecessary middle-page repetitions.
+          s=s.replace('during the pilot, ', '')
+          s=s.replace('During the pilot, ', '')
+          s=s.replace(' during the pilot.', '.')
+          # Restore the intentional top explanation if a broad replacement touched it.
+          s=s.replace('<strong>What “pilot” means:</strong> Pilot describes the introductory phase of the service—not experimental handling of customer files.', '<strong>What “pilot” means:</strong> Pilot describes the introductory phase of the service—not experimental handling of customer files.')
+          # Keep one explicit closing pilot reference in the Austin credential section.
+          marker='Raw File Rescue is being developed in Austin, Texas, with a measured focus on practical service, clear safeguards, and documented results.'
+          if marker in s:
+              s=s.replace(marker,'Raw File Rescue is being developed in Austin, Texas, with a measured pilot focused on practical service, clear safeguards, and documented results.')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git rm .github/workflows/08.28.26_reduce_pilot_repetition.yml
+          git commit -m 'Reduce pilot repetition and clarify paper control'
+          git push
