@@ -1,0 +1,89 @@
+name: 08.28.26 Apply Conversational Outcome Update
+on:
+  push:
+    paths:
+      - '.github/workflows/08.28.26_apply_conversational_outcome_update.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install beautifulsoup4
+      - name: Update index
+        run: |
+          python - <<'PY'
+          from bs4 import BeautifulSoup
+          from pathlib import Path
+          p=Path('index.html')
+          soup=BeautifulSoup(p.read_text(encoding='utf-8'),'html.parser')
+          meta=soup.find('meta',attrs={'name':'description'})
+          meta['content']='Raw File Rescue helps individuals and small businesses find important documents faster, clean up years of digital clutter, turn AI chats into usable business documents, and build systems that stay organized.'
+          for a in soup.select('.nav-links a'):
+              if a.get_text(strip=True)=='Services': a.string='How I Can Help'
+          hero=soup.select_one('section.hero')
+          hero.select('p.hero-copy')[0].string='When files, paper, or AI chats start slowing you down, Raw File Rescue helps turn the backlog into information you can actually find, understand, and use.'
+          hero.select_one('.actions .btn-primary').string="Tell Me What's Going On"
+          trust=soup.select('.trust-item')
+          trust[0].p.string='Know where to look and get to important information faster.'
+          trust[1].p.string='Spend less time hunting through backlogs and more time using what you already have.'
+          services=soup.find('section',id='services')
+          services.select_one('.heading p').string="Tell me what's getting in your way. The solution comes second."
+          cards=services.select('.card')
+          specs=[
+          ("Tired of hunting for the same file?","Digital File Rescue","Raw File Rescue can sort through the backlog and leave you with a system that makes sense, so you know where to look next time.","View demonstrations →","#personal-examples"),
+          ("Business files getting harder to keep up with?","Business File Cleanup","Invoices, receipts, statements, and project files can be brought into a practical system that's easier to use and maintain.","View business demonstrations →","#business-examples"),
+          ("Got useful stuff buried in a long AI chat?","Chat-to-Document","Turn the conversation into a clean working document, summary, action list, or project record you can actually use.","View chat demonstrations →","#chat-examples"),
+          ("Need specific information pulled out of a pile?","Data Extraction","Turn information buried across files and documents into a usable table, inventory, list, or structured record.","Open extraction sample →","samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Data_Extraction_Sample.xlsx"),
+          ("Paper piling up?","Paper-to-Digital","Turn a manageable paper backlog into information that's easier to search and retrieve, while the originals stay with you.","View demonstration →","#personal-examples"),
+          ("Paper and digital files mixed together?","Mixed Backlog Rescue","Bring the pieces together into one understandable system instead of keeping separate piles that don't connect.","View demonstration →","#personal-examples")]
+          for card,spec in zip(cards[:6],specs):
+              card.h3.string=spec[0]
+              card.find('p').string=spec[2]
+              note=soup.new_tag('span',attrs={'class':'note'}); note.string=spec[1]; card.h3.insert_after(note)
+              a=card.find('a'); a.string=spec[3]; a['href']=spec[4]
+          b=cards[6]; b.h3.string='Bookmarks impossible to find anything in?'; b.find('p').string='Turn an overloaded bookmark collection into a manageable set of links you can actually find and use.'
+          note=soup.new_tag('span',attrs={'class':'note'}); note.string='Bookmark & Saved-Link Cleanup'; b.h3.insert_after(note)
+          ps=b.find_all('p'); ps[1].string='For remote projects, you send an exported bookmark file - no browser password or account access needed. Anything that looks outdated, duplicated, or broken is flagged for your review rather than deleted automatically.'
+          b.find('a').string='See the cleanup approach →'
+          r=cards[7]; r.h3.string='Looking for deleted-file or failed-drive recovery?'; r.find('p').string="That's a different service. Raw File Rescue organizes material you can already access; the pilot does not provide forensic recovery, failed-drive recovery, or hardware repair."
+          soup.find('section',id='before-after').select_one('.heading p').string='The goal is simple: find what you need, understand what you have, and keep it usable.'
+          ex=soup.find('section',id='examples')
+          changes=[('business-examples','Business records you can actually find','Pepper Riot is a synthetic demonstration business showing what it looks like when scattered business material becomes easier to find and use.'),('personal-examples','Personal files that make sense again','Downloads, cloud-drive folders, and mixed paper-and-digital material can become a system you can understand and keep using.'),('chat-examples','Useful work pulled out of AI chats','Long conversations can become clear working documents, concise extracts, action lists, and project-ready records.')]
+          for gid,title,copy in changes:
+              g=ex.find(id=gid); g.find('h3').string=title; g.find('p',class_='group-copy').string=copy
+          diy=soup.find('section',id='diy-file-rescue')
+          for para in diy.select('.diy-intro p'):
+              if "That's where" in para.get_text():
+                  para.clear(); para.append("That's where "); st=soup.new_tag('strong'); st.string='Raw File Rescue'; para.append(st); para.append(" comes in. I can take the repetitive cleanup off your plate and leave you with a system you can understand and keep using.")
+          dc=diy.select_one('.diy-cta'); dc.find('p').string='You can do all of this yourself.'; dc.find('h2').string='Or you can hand over the backlog.'; dc.find_all('p')[-1].string="If you know something needs fixing but don't want to spend hours sorting it out, see how the process works."; btn=dc.find('a',class_='btn'); btn['href']='#how-it-works'; btn.string='See How It Works'
+          pricing=soup.find('section',id='pricing'); pc=pricing.select_one('.pricing-copy'); pc.find('h2').string='Know the Plan Before Paid Work Begins'
+          pp=pc.find_all('p',recursive=False); pp[0].string="Every backlog is different. We start by talking through the problem, then I give you a proposed scope, expected cost, and Total Project Ceiling before paid work begins."; pp[1].string="The $30/hour pilot rate applies to approved production work. The initial inquiry, qualification, risk review, consultation, and quote preparation are complimentary unless you explicitly authorize a paid assessment."
+          pc.find_all('h3',recursive=False)[0].string='Paid work might include:'
+          ul=pc.find('ul',class_='checks'); [li.decompose() for li in list(ul.find_all('li'))]
+          for text in ['Getting a scattered backlog into a usable system','Making business or personal records easier to find and keep up with','Turning AI chats into working documents, summaries, or action lists','Pulling needed information into a table, inventory, or structured record','Digitizing approved paper material on site','Quality control, delivery, and one basic correction round within scope','Customer-specific travel only when it is part of the approved plan']:
+              li=soup.new_tag('li'); li.string=text; ul.append(li)
+          for a in pc.find_all('a',class_='btn'):
+              if a.get('href')=='#contact': a.decompose()
+          cost=pc.find('div',class_='cost'); box=soup.new_tag('div',attrs={'class':'cost'}); h=soup.new_tag('h3'); h.string='No surprise overages'; box.append(h)
+          q=soup.new_tag('p'); q.string="Your quote includes an expected total and a Total Project Ceiling covering labor, customer-specific travel time, approved travel expenses, and approved third-party or other project expenses. I'll warn you at about 80% of the ceiling - or sooner if the remaining work looks likely to hit it - and I stop for written approval before going over the cap."; box.append(q)
+          q=soup.new_tag('p'); q.string="If an extra on-site trip wasn't in the approved plan, I ask first. A change also needs approval if it adds a new deliverable, source location/account, material category, access method, risk control, approved expense, more than 30 minutes of billable labor beyond scope, or would push the project over the ceiling."; box.append(q); cost.insert_before(box)
+          how=soup.find('section',id='how-it-works'); steps=how.select('.step'); steps[2].p.string='I do the agreed work and keep the project inside the approved scope and ceiling.'; steps[3].p.string='You get the result in a form you can actually use - and know where it lives.'
+          st=soup.find(id='service-terms'); st.find_all('p')[0].string='Before billable work begins, you receive a defined scope, proposed approach, expected cost, and Total Project Ceiling. A change requires approval when it adds a new deliverable, source location/account, material category, access method, risk control, additional unplanned trip, approved expense, more than 30 minutes of billable labor beyond scope, or would exceed the ceiling. RFR warns at approximately 80% of the ceiling, or sooner when the remaining work is reasonably expected to reach it.'
+          contact=soup.find('section',id='contact'); contact.find('h2').string='Not sure what you need yet?'; contact.select_one('.cta-box > div > p').string="That's fine. Tell me what's giving you trouble, and I'll help figure out a practical way to tackle it. You'll see the scope and estimate before any billable work begins."; contact.select('.cta-actions a')[0].string='Start Your Inquiry'
+          footer=soup.find('footer'); cols=footer.select('.footer-grid > div'); cols[1].find('h4').string='Problems We Help Solve'
+          for li,label in zip(cols[1].find_all('li'),['Hard-to-find files','Business records','AI chats','Information buried in documents','Paper backlogs','Bookmark clutter']): li.a.string=label
+          p.write_text(str(soup),encoding='utf-8')
+          PY
+      - name: Commit update and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git rm .github/workflows/08.28.26_apply_conversational_outcome_update.yml
+          git commit -m 'Use outcome-first conversational website messaging'
+          git push
