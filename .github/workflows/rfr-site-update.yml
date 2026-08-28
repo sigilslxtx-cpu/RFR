@@ -1,0 +1,105 @@
+name: RFR Website Update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rfr-site-update.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply approved website changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global s
+              if old not in s:
+                  raise SystemExit(f'Missing expected text for {label}')
+              s = s.replace(old, new, 1)
+
+          replace_once(
+              '<p class="experience">Raw File Rescue is a new service built on years of hands-on office, administrative, organizational, and records-related experience.</p><div class="actions">',
+              '<p class="experience">Raw File Rescue is a new service built on years of hands-on office, administrative, organizational, and records-related experience.</p><p class="hero-copy"><strong>What “pilot” means:</strong> Pilot describes the introductory phase of the service—not experimental handling of customer files. Your project still uses an agreed scope, documented safeguards, and your control over access and deletion decisions.</p><div class="actions">',
+              'pilot clarification')
+
+          replace_once(
+              '<div class="trust-item"><strong>Built Around the Problem</strong><p>The solution depends on what your backlog actually needs.</p></div></div></section>',
+              '<div class="trust-item"><strong>Built Around the Problem</strong><p>The solution depends on what your backlog actually needs.</p></div></div><div class="container"><div class="control-panel" style="margin:24px auto 0"><h3>Owner-operated during the pilot</h3><p>Raw File Rescue is an owner-operated service. During the pilot, customer work is performed by Chris Guittard, owner/operator.</p></div></div></section>',
+              'owner identity')
+
+          replace_once(
+              '<article class="card wide"><h3>Bookmark &amp; Saved-Link Cleanup</h3><p>Organize browser bookmarks into clear folders, rename confusing entries, and identify duplicate, outdated, or potentially broken links for your review.</p><p style="margin-top:12px;color:var(--navy);font-weight:700">Remote projects use an exported bookmark file—no browser passwords or account access required. Automated results are review candidates, not automatic deletion decisions.</p><a href="#diy-file-rescue">See the cleanup approach →</a></article></div></div></section>',
+              '<article class="card wide"><h3>Bookmark &amp; Saved-Link Cleanup</h3><p>Organize browser bookmarks into clear folders, rename confusing entries, and identify duplicate, outdated, or potentially broken links for your review.</p><p style="margin-top:12px;color:var(--navy);font-weight:700">Remote projects use an exported bookmark file—no browser passwords or account access required. Automated results are review candidates, not automatic deletion decisions.</p><a href="#diy-file-rescue">See the cleanup approach →</a></article><article class="card wide"><h3>Organization, not data recovery</h3><p>Raw File Rescue works with files and material you can access. The pilot does not provide deleted-file recovery, failed-drive recovery, forensic recovery, or hardware repair.</p></article></div></div></section>',
+              'data recovery distinction')
+
+          replace_once('<h2>Real Rescue Examples</h2>', '<h2>Rescue Demonstrations</h2>', 'examples heading')
+          replace_once(
+              '<p>Examples show the kinds of transformations Raw File Rescue can perform. Every project is scoped around the customer\'s actual material.</p>',
+              '<p>These synthetic demonstrations show the kinds of transformations Raw File Rescue can perform. No customer files are shown. Every project is scoped around the customer\'s actual material.</p>',
+              'examples description')
+          replace_once('<h3>Pepper Riot Business Rescue</h3>', '<h3>Business File Rescue Demonstrations</h3>', 'business examples heading')
+          replace_once(
+              '<p class="group-copy">A demonstration business backlog showing how downloads, Google Drive or Microsoft OneDrive material, sales orders, and receipts can be brought into a consistent project archive.</p>',
+              '<p class="group-copy">Pepper Riot is a synthetic demonstration business used to show how downloads, Google Drive or Microsoft OneDrive material, sales orders, and receipts can be brought into a consistent project archive.</p>',
+              'business examples copy')
+          replace_once('<h3>Personal File Rescue</h3>', '<h3>Personal File Rescue Demonstrations</h3>', 'personal examples heading')
+          replace_once('<figcaption>Personal Downloads Cleanup</figcaption>', '<figcaption>Personal Downloads Cleanup Demonstration</figcaption>', 'personal downloads caption')
+          replace_once('<figcaption>Personal Cloud-Drive Organization</figcaption>', '<figcaption>Personal Cloud-Drive Organization Demonstration</figcaption>', 'personal drive caption')
+          replace_once('<figcaption>Mixed Paper + Digital Rescue</figcaption>', '<figcaption>Mixed Paper + Digital Rescue Demonstration</figcaption>', 'mixed caption')
+          replace_once('<h3>Chat and Document Transformation</h3>', '<h3>Chat-to-Document Demonstrations</h3>', 'chat examples heading')
+          replace_once('<figcaption>Chat Extraction</figcaption>', '<figcaption>Chat Extraction Demonstration</figcaption>', 'chat extraction caption')
+          replace_once('<figcaption>Full Chat-to-Document Transformation</figcaption>', '<figcaption>Full Chat-to-Document Transformation Demonstration</figcaption>', 'full c2d caption')
+
+          replace_once(
+              '<strong>7-Day Temporary-Data Deletion</strong><p>Temporary working copies are ordinarily deleted seven calendar days after the final deliverable is successfully sent or made available.</p>',
+              '<strong>7-Day Temporary-Data Deletion</strong><p>Temporary working copies are ordinarily deleted seven calendar days after the final deliverable is successfully sent or made available, and that deletion is documented in the project record.</p>',
+              'deletion documentation')
+
+          replace_once(
+              '<p>Temporary working copies are ordinarily deleted seven days after the final deliverable is successfully sent or made available through the agreed delivery method.</p>',
+              '<p>Temporary working copies are ordinarily deleted seven days after the final deliverable is successfully sent or made available through the agreed delivery method. When temporary working copies are deleted under this rule, the deletion is documented in the project record.</p>',
+              'privacy deletion documentation')
+
+          replace_once(
+              '<p>External AI processing is optional and requires express customer authorization. Browser-cleanup customers provide an exported bookmark file; browser passwords and account access are not requested.</p>',
+              '<p>External AI processing is optional and requires express customer authorization. Browser-cleanup customers provide an exported bookmark file; browser passwords and account access are not requested.</p><p>For customer-owned cloud access, access is limited to the approved material. At project closeout, Raw File Rescue removes its access where possible and confirms with the customer that any remaining customer-controlled sharing or permissions have been revoked. The closeout is documented.</p>',
+              'cloud access closeout')
+
+          replace_once(
+              '<p>Accepted projects use written intake, scope, authorization, review, delivery, and payment documentation appropriate to the work.</p>',
+              '<p>Accepted projects use written intake, scope, authorization, review, delivery, and payment documentation appropriate to the work. Project closeout documentation includes applicable customer-owned cloud-access closeout and temporary-working-copy deletion records.</p>',
+              'project closeout documentation')
+
+          replace_once(
+              '<section class="blue-section"><div class="container affiliation"><img loading="lazy" src="assets/affiliations/06.12.26_Austin_Economic_Development_Badge.png" alt="Austin Economic Development affiliation badge"><p>Raw File Rescue is being developed in Austin, Texas, with a measured pilot focused on practical service, clear safeguards, and documented results.</p></div></section>',
+              '<section class="blue-section"><div class="container affiliation"><a href="assets/affiliations/8.28.26.Business%20Skills%20Certificate.jpg" target="_blank" rel="noopener noreferrer" aria-label="View Austin Economic Development Business Skills Certificate"><img loading="lazy" src="assets/affiliations/06.12.26_Austin_Economic_Development_Badge.png" alt="Austin Economic Development Business Skills Certificate badge"></a><p>Raw File Rescue is being developed in Austin, Texas, with a measured pilot focused on practical service, clear safeguards, and documented results. Click the badge to view the Business Skills Certificate.</p></div></section>',
+              'clickable certificate badge')
+
+          low = s.lower()
+          forbidden = ['secure deletion', 'securely delete', 'securely deleted']
+          for phrase in forbidden:
+              if phrase in low:
+                  raise SystemExit(f'Forbidden unsupported deletion claim found: {phrase}')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit update and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/rfr-site-update.yml
+          git add index.html
+          git commit -m "Update pilot clarity, safeguards, demonstrations, and certificate link"
+          git push
