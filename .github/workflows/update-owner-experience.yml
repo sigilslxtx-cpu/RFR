@@ -1,0 +1,31 @@
+name: Update owner experience language
+on:
+  push:
+    paths:
+      - '.github/workflows/update-owner-experience.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update owner-operated copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='Customer work is performed by Chris Guittard, owner/operator.'
+          new='Customer work is performed by Chris Guittard, owner/operator, drawing on <strong>more than 20 years of professional and personal experience organizing files, records, documents, and information.</strong>'
+          if old not in s:
+              raise SystemExit('Owner-operated sentence not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Strengthen owner experience language"
+          git push
