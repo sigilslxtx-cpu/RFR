@@ -1,0 +1,68 @@
+name: Integrate demonstration links
+on:
+  push:
+    paths:
+      - '.github/workflows/integrate-demo-links.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Integrate compact demonstration links
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text()
+          # Locate current compact examples section and capture its hrefs by visible label.
+          links={}
+          for label in ['See the Original Conversation','See the Key Points Pulled Out','See the Conversation Turned Into a Useful Document','See Several Conversations Combined Into One Document']:
+              m=re.search(r'<a[^>]+href="([^"]+)"[^>]*>'+re.escape(label)+r'\s*→?</a>',s,re.I)
+              if m: links[label]=m.group(1)
+          # Also tolerate cards/markup around anchor text.
+          if len(links)<4:
+              for m in re.finditer(r'<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>',s,re.I|re.S):
+                  txt=re.sub('<[^>]+>',' ',m.group(2)); txt=' '.join(txt.split()).rstrip(' →')
+                  for label in ['See the Original Conversation','See the Key Points Pulled Out','See the Conversation Turned Into a Useful Document','See Several Conversations Combined Into One Document']:
+                      if txt==label: links[label]=m.group(1)
+          # Find AI useful-document service card and replace generic demo link with compact sequence.
+          if all(k in links for k in ['See the Original Conversation','See the Key Points Pulled Out','See the Conversation Turned Into a Useful Document']):
+              sequence=(f'<div class="demo-links"><strong>See this demonstration:</strong> '
+                        f'<a href="{links["See the Original Conversation"]}" target="_blank" rel="noopener">Original →</a> '
+                        f'<a href="{links["See the Key Points Pulled Out"]}" target="_blank" rel="noopener">Key points →</a> '
+                        f'<a href="{links["See the Conversation Turned Into a Useful Document"]}" target="_blank" rel="noopener">Finished document →</a></div>')
+              # Card containing the distinctive description shown on the site.
+              pat=r'(<div class="card"[^>]*>.*?See a long AI conversation turned into a document you can actually use\..*?)(<a[^>]*>View demonstration\s*→</a>)(.*?</div>)'
+              s,n=re.subn(pat,lambda m:m.group(1)+sequence+m.group(3),s,count=1,flags=re.I|re.S)
+          # Find multi-conversation service card and point its generic link directly to its demo.
+          multi=links.get('See Several Conversations Combined Into One Document')
+          if multi:
+              # Identify card by conversation-combining language/title and replace first generic demo href within it.
+              pat=r'(<div class="card"[^>]*>.*?(?:Several Conversations|Multiple Conversations|conversations combined).*?)(<a[^>]+href="[^"]+"[^>]*>View demonstration\s*→</a>)(.*?</div>)'
+              def repl(m):
+                  a=re.sub(r'href="[^"]+"',f'href="{multi}" target="_blank" rel="noopener"',m.group(2),count=1)
+                  return m.group(1)+a+m.group(3)
+              s,_=re.subn(pat,repl,s,count=1,flags=re.I|re.S)
+          # Remove the standalone compact demonstration index containing the four See-the links.
+          # Match the section by id=examples and only remove it if it contains these link labels.
+          sec=re.search(r'<section[^>]+id="examples"[^>]*>.*?</section>',s,re.I|re.S)
+          if sec and 'See the Original Conversation' in sec.group(0) and 'See Several Conversations Combined Into One Document' in sec.group(0):
+              s=s[:sec.start()]+s[sec.end():]
+          # Make Examples nav/hero links land on services now that duplicate index is gone.
+          s=s.replace('href="#examples">Examples</a>','href="#services">Examples</a>')
+          s=s.replace('href="#examples">See Demonstrations</a>','href="#services">See Demonstrations</a>')
+          # Compact link styling.
+          css='.demo-links{margin-top:14px;color:var(--navy);font-size:.92rem}.demo-links strong{display:block;margin-bottom:5px}.demo-links a{display:inline;margin:0 12px 0 0;color:var(--blue);font-weight:800;white-space:nowrap}@media(max-width:680px){.demo-links a{display:inline-block;margin-top:5px}}'
+          s=s.replace('</style>',css+'</style>',1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Integrate demo links into service cards"
+          git push
