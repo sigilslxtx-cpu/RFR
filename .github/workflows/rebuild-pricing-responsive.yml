@@ -1,0 +1,41 @@
+name: Rebuild responsive pricing
+on:
+  push:
+    paths:
+      - '.github/workflows/rebuild-pricing-responsive.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild pricing section
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text()
+          new='''<section class="section" id="pricing"><div class="container"><div class="heading"><h2>Pricing</h2><div class="accent-line"></div><p>Clear pricing. No surprises. You stay in control from start to finish.</p></div><div class="pricing-mobile-first">
+          <div class="consult pricing-consult"><h3>Complimentary Consultation</h3><p><strong>No charge before you approve the written plan and paid work begins.</strong></p><ul class="checks"><li>Initial inquiry and basic fit check</li><li>Talk through what is causing the problem</li><li>Risk review and safeguards</li><li>Prepare the written plan and estimate</li></ul></div>
+          <div class="price-card pricing-rate"><div class="label">Paid-Work Rate</div><div class="price">$30 <small>/ hour</small></div><p><strong>$30/hour for approved paid work</strong>, billed in <strong>15-minute increments</strong>.</p><p>The consultation, risk review, and written plan are <strong>complimentary</strong>.</p><p><strong>Paid time is recorded through Clockify; an itemized time report is available on request.</strong></p></div>
+          <div class="cost pricing-plan"><h3>Know the Plan Before Paid Work Begins</h3><p>Before any paid work starts, you receive a written plan that includes:</p><ul class="checks"><li><strong>What I’ll do</strong></li><li><strong>What you’ll receive</strong></li><li><strong>Expected cost</strong></li><li><strong>Maximum project cost</strong></li><li><strong>80% advisory point</strong></li><li><strong>Approximate labor hours</strong>, when useful</li></ul><p><strong>I stop for written approval before going over the maximum.</strong></p></div>
+          <div class="cost pricing-paid"><h3>Paid work might include</h3><ul class="checks"><li>Getting a scattered backlog into a usable system</li><li>Making business or personal records easier to find and keep up with</li><li>Turning AI chats into working documents, summaries, or action lists</li><li>Pulling needed information into a table, inventory, or structured record</li><li>Digitizing approved paper material on site</li><li>A final check, delivery, and one basic correction round within what we agreed</li><li>Travel for your job only when it is part of the plan you approved</li></ul></div>
+          <div class="cost pricing-overages"><h3>No Surprise Overages</h3><p>Your written plan includes an expected total and a <strong>maximum project cost</strong> covering paid work, customer-specific travel time, approved travel expenses, and approved outside costs.</p><p>Your written plan shows the <strong>80% point</strong> when I’ll advise you that you’re approaching the project maximum. When labor is the main cost, I’ll also show the approximate number of hours.</p><p><strong>Example:</strong> $300 maximum → 80% point is $240, or about 8 hours of labor.</p><p>Additional written approval is required for:</p><ul class="checks"><li>An extra on-site trip</li><li>A new type of work</li><li>A new source of material</li><li>A different access method</li><li>Another approved expense that was not part of the original plan</li></ul><p><strong>I stop for written approval before going over the maximum.</strong></p></div>
+          <div class="cost pricing-employee"><h3>How does $30/hour compare with hiring an employee?</h3><p>A $22/hour employee costs an employer at least about <strong>$23.68/hour</strong> after employer Social Security and Medicare taxes alone. Using the average private-industry wage share reported by the U.S. Bureau of Labor Statistics gives an illustrative total-compensation cost of about <strong>$31.50/hour</strong>.</p><p>That estimate is <strong>not including recruiting, equipment, training, supervision, and other business costs.</strong></p><p style="font-size:.83rem">Sources: <a class="text-link" href="https://apps.irs.gov/app/understandingTaxes/hows/tax_tutorials/mod01/tt_mod01_04.jsp" rel="noopener" target="_blank">Internal Revenue Service payroll-tax tutorial</a> and <a class="text-link" href="https://www.bls.gov/news.release/ecec.nr0.htm" rel="noopener" target="_blank">U.S. Bureau of Labor Statistics, Employer Costs for Employee Compensation</a>.</p></div>
+          </div></div></section>'''
+          s,n=re.subn(r'<section class="section" id="pricing">.*?</section>',new,s,count=1,flags=re.S)
+          if n!=1: raise SystemExit('pricing section not found')
+          css='''.pricing-mobile-first{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);grid-template-areas:"plan consult" "paid rate" "overages rate" "employee employee";gap:24px;align-items:start}.pricing-mobile-first .cost{margin-top:0}.pricing-consult{grid-area:consult;margin:0}.pricing-rate{grid-area:rate}.pricing-plan{grid-area:plan}.pricing-paid{grid-area:paid}.pricing-overages{grid-area:overages}.pricing-employee{grid-area:employee}@media(max-width:980px){.pricing-mobile-first{grid-template-columns:1fr;grid-template-areas:"consult" "rate" "plan" "paid" "overages" "employee";gap:18px}.pricing-mobile-first>*{min-width:0}.pricing-mobile-first .price-card,.pricing-mobile-first .cost,.pricing-mobile-first .consult{width:100%;max-width:100%}}@media(max-width:680px){#pricing .section{padding-left:0;padding-right:0}.pricing-mobile-first{gap:14px}.pricing-mobile-first .cost,.pricing-mobile-first .consult,.pricing-mobile-first .price-card{padding:22px 20px}.pricing-mobile-first .price{font-size:2.75rem}.pricing-mobile-first h3{line-height:1.25}.pricing-mobile-first .checks li{overflow-wrap:anywhere}}'''
+          s=s.replace('</style>',css+'</style>',1)
+          s=s.replace('<li><a href="#examples">Demonstrations</a></li>','<li><a href="#services">Demonstrations</a></li>')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Rebuild pricing section for responsive mobile layout"
+          git push
