@@ -1,0 +1,29 @@
+name: Fix navigation
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-nav.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update navigation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('<a href="#services">How I Can Help</a><a href="#services">Examples</a><a href="#pricing">Pricing</a><a href="#contact">Contact</a>', '<a href="#services">How I Can Help</a><a href="#pricing">Pricing</a><a href="#contact">Contact</a>')
+          s=s.replace('.site-header .nav-links a:nth-child(4),.site-header .nav-links a:nth-child(5){display:none}', '')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Simplify nav and show Contact on mobile"
+          git push
