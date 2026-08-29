@@ -1,0 +1,39 @@
+name: Streamline homepage demonstrations
+on:
+  push:
+    paths:
+      - '.github/workflows/streamline-demos.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace inline demo gallery with compact linked demo index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          start=s.index('<section class="section blue-section" id="before-after">')
+          end=s.index('<section class="section alt diy" id="diy-file-rescue">')
+          compact='''<section class="section blue-section" id="examples"><div class="container"><div class="heading"><h2>Rescue Demonstrations</h2><div class="accent-line"></div><p>See only the examples that matter to you. Each demonstration opens separately so you can compare the before-and-after result without scrolling through a long gallery.</p></div><div class="cards"><article class="card"><h3>Digital files</h3><p>See scattered files turned into a system that is easier to find and use.</p><a href="assets/examples/general/08.27.26.v3_RFR_Digital_File_Rescue_Before_After.webp" rel="noopener" target="_blank">View demonstration →</a></article><article class="card"><h3>Business files</h3><p>See downloads, cloud-drive folders, sales orders, and receipts organized into usable records.</p><a href="assets/examples/business/08.27.26.v3_pepper_riot_drive_before_after_final.webp" rel="noopener" target="_blank">View demonstration →</a></article><article class="card"><h3>Personal files</h3><p>See personal downloads and cloud-drive material organized into a system that makes sense.</p><a href="assets/examples/personal/08.27.26.v3_personal_drive_before_after_final.webp" rel="noopener" target="_blank">View demonstration →</a></article><article class="card"><h3>Paper + digital</h3><p>See mixed paper and digital material brought together into one understandable system.</p><a href="assets/examples/personal/08.27.26.v3_personal_mixed_scanning_before_after_final.webp" rel="noopener" target="_blank">View demonstration →</a></article><article class="card"><h3>AI conversation → key points</h3><p>See useful information pulled out of a long AI conversation.</p><a href="assets/examples/chat/08.27.26.v3_RFR_Chat_Extraction_Before_After.webp" rel="noopener" target="_blank">View demonstration →</a></article><article class="card"><h3>AI conversation → useful document</h3><p>See a long AI conversation turned into a document you can actually use.</p><a href="assets/examples/chat/08.27.26.v3_RFR_Full_C2D_Before_After.webp" rel="noopener" target="_blank">View demonstration →</a></article></div><div class="downloads"><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Raw_Chat_1_Before_Sample.pdf" rel="noopener" target="_blank">See the Original Conversation →</a><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Chat_Summary_Sample.pdf" rel="noopener" target="_blank">See the Key Points Pulled Out →</a><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Full_Chat_to_Document_Sample.pdf" rel="noopener" target="_blank">See the Conversation Turned Into a Useful Document →</a><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Multi_Chat_Project_Consolidation_Sample.pdf" rel="noopener" target="_blank">See Several Conversations Combined Into One Document →</a></div></div></section>\n'''
+          s=s[:start]+compact+s[end:]
+          # Point service-card demonstration links directly to the relevant demos.
+          replacements={
+          'href="#personal-examples">View demonstrations →':'href="assets/examples/personal/08.27.26.v3_personal_drive_before_after_final.webp" rel="noopener" target="_blank">View demonstration →',
+          'href="#business-examples">View business demonstrations →':'href="assets/examples/business/08.27.26.v3_pepper_riot_drive_before_after_final.webp" rel="noopener" target="_blank">View demonstration →',
+          'href="#chat-examples">View chat demonstrations →':'href="assets/examples/chat/08.27.26.v3_RFR_Full_C2D_Before_After.webp" rel="noopener" target="_blank">View demonstration →',
+          'href="#personal-examples">View demonstration →':'href="assets/examples/personal/08.27.26.v3_personal_mixed_scanning_before_after_final.webp" rel="noopener" target="_blank">View demonstration →'
+          }
+          for a,b in replacements.items(): s=s.replace(a,b)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Replace inline demos with linked demonstrations"
+          git push
