@@ -1,0 +1,32 @@
+name: Restore C2D PDF links
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-c2d-pdf-links.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore PDF links to Chat-to-Document card
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='<article class="card"><h3>Got useful stuff buried in a long AI chat?</h3><span class="note">Chat-to-Document</span><p>Turn the conversation into a clean working document, summary, action list, or project record you can actually use.</p><a href="assets/examples/chat/08.27.26.v3_RFR_Full_C2D_Before_After.webp" rel="noopener" target="_blank">View demonstration →</a></article>'
+          new='''<article class="card"><h3>Got useful stuff buried in a long AI chat?</h3><span class="note">Chat-to-Document</span><p>Turn the conversation into a clean working document, summary, action list, or project record you can actually use.</p><div class="demo-links"><strong>See this demonstration:</strong><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Raw_Chat_1_Before_Sample.pdf" rel="noopener" target="_blank">Original chat →</a><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Chat_Summary_Sample.pdf" rel="noopener" target="_blank">Summary →</a><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Full_Chat_to_Document_Sample.pdf" rel="noopener" target="_blank">Finished document →</a><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Multi_Chat_Project_Consolidation_Sample.pdf" rel="noopener" target="_blank">Multiple chats → one document →</a></div></article>'''
+          if old not in s:
+              raise SystemExit('Chat-to-Document card pattern not found; no changes made')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Restore C2D PDF demonstration links"
+          git push
