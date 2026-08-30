@@ -1,0 +1,35 @@
+name: Add insurance trust statement
+on:
+  push:
+    paths:
+      - '.github/workflows/add-insurance-trust.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add insurance trust item
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='<div class="reassurance"><div><strong>Review Before Delete</strong><p>Potential deletions are reviewed before permanent removal.</p></div><div><strong>Temporary Copies Deleted After 7 Days</strong><p>Temporary copies I make while working are ordinarily deleted seven calendar days after your finished work is sent or made available, and I record that the deletion was completed.</p></div><div><strong>Backup Before I Make Changes</strong><p>Before I change files you control, I confirm with you that a backup or recoverable starting copy exists.</p></div><div><strong>Your Paper Stays With You</strong><p>Paper scanning is done on site. <strong>You keep control of your originals.</strong></p></div></div>'
+          new='<div class="reassurance"><div><strong>Review Before Delete</strong><p>Potential deletions are reviewed before permanent removal.</p></div><div><strong>Temporary Copies Deleted After 7 Days</strong><p>Temporary copies I make while working are ordinarily deleted seven calendar days after your finished work is sent or made available, and I record that the deletion was completed.</p></div><div><strong>Backup Before I Make Changes</strong><p>Before I change files you control, I confirm with you that a backup or recoverable starting copy exists.</p></div><div><strong>Your Paper Stays With You</strong><p>Paper scanning is done on site. <strong>You keep control of your originals.</strong></p></div><div><strong>Liability &amp; Professional Coverage</strong><p>General liability and professional liability (E&amp;O) insurance will be in place before any customer work begins. <strong>Proof of coverage will be provided before work starts.</strong></p></div></div>'
+          if old not in s:
+              raise SystemExit('Reassurance block not found')
+          s=s.replace(old,new,1)
+          # Let the 5th item wrap cleanly on desktop and mobile.
+          s=s.replace('.reassurance{display:grid;grid-template-columns:repeat(4,1fr);', '.reassurance{display:grid;grid-template-columns:repeat(5,1fr);',1)
+          s=s.replace('.trust-grid,.steps,.reassurance{grid-template-columns:repeat(2,1fr)}', '.trust-grid,.steps,.reassurance{grid-template-columns:repeat(2,1fr)}',1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Add liability and E&O coverage statement"
+          git push
