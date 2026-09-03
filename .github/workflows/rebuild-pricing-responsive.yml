@@ -1,4 +1,4 @@
-name: Rebuild responsive pricing
+name: Sync website to RFR v7
 on:
   push:
     paths:
@@ -10,32 +10,77 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Rebuild pricing section
+      - name: Sync public website to current playbook
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-          p=Path('index.html')
-          s=p.read_text()
-          new='''<section class="section" id="pricing"><div class="container"><div class="heading"><h2>Pricing</h2><div class="accent-line"></div><p>Clear pricing. No surprises. You stay in control from start to finish.</p></div><div class="pricing-mobile-first">
-          <div class="consult pricing-consult"><h3>Complimentary Consultation</h3><p><strong>No charge before you approve the written plan and paid work begins.</strong></p><ul class="checks"><li>Initial inquiry and basic fit check</li><li>Talk through what is causing the problem</li><li>Risk review and safeguards</li><li>Prepare the written plan and estimate</li></ul></div>
-          <div class="price-card pricing-rate"><div class="label">Paid-Work Rate</div><div class="price">$30 <small>/ hour</small></div><p><strong>$30/hour for approved paid work</strong>, billed in <strong>15-minute increments</strong>.</p><p>The consultation, risk review, and written plan are <strong>complimentary</strong>.</p><p><strong>Paid time is recorded through Clockify; an itemized time report is available on request.</strong></p></div>
-          <div class="cost pricing-plan"><h3>Know the Plan Before Paid Work Begins</h3><p>Before any paid work starts, you receive a written plan that includes:</p><ul class="checks"><li><strong>What I’ll do</strong></li><li><strong>What you’ll receive</strong></li><li><strong>Expected cost</strong></li><li><strong>Maximum project cost</strong></li><li><strong>80% advisory point</strong></li><li><strong>Approximate labor hours</strong>, when useful</li></ul><p><strong>I stop for written approval before going over the maximum.</strong></p></div>
-          <div class="cost pricing-paid"><h3>Paid work might include</h3><ul class="checks"><li>Getting a scattered backlog into a usable system</li><li>Making business or personal records easier to find and keep up with</li><li>Turning AI chats into working documents, summaries, or action lists</li><li>Pulling needed information into a table, inventory, or structured record</li><li>Digitizing approved paper material on site</li><li>A final check, delivery, and one basic correction round within what we agreed</li><li>Travel for your job only when it is part of the plan you approved</li></ul></div>
-          <div class="cost pricing-overages"><h3>No Surprise Overages</h3><p>Your written plan includes an expected total and a <strong>maximum project cost</strong> covering paid work, customer-specific travel time, approved travel expenses, and approved outside costs.</p><p>Your written plan shows the <strong>80% point</strong> when I’ll advise you that you’re approaching the project maximum. When labor is the main cost, I’ll also show the approximate number of hours.</p><p><strong>Example:</strong> $300 maximum → 80% point is $240, or about 8 hours of labor.</p><p>Additional written approval is required for:</p><ul class="checks"><li>An extra on-site trip</li><li>A new type of work</li><li>A new source of material</li><li>A different access method</li><li>Another approved expense that was not part of the original plan</li></ul><p><strong>I stop for written approval before going over the maximum.</strong></p></div>
-          <div class="cost pricing-employee"><h3>How does $30/hour compare with hiring an employee?</h3><p>A $22/hour employee costs an employer at least about <strong>$23.68/hour</strong> after employer Social Security and Medicare taxes alone. Using the average private-industry wage share reported by the U.S. Bureau of Labor Statistics gives an illustrative total-compensation cost of about <strong>$31.50/hour</strong>.</p><p>That estimate is <strong>not including recruiting, equipment, training, supervision, and other business costs.</strong></p><p style="font-size:.83rem">Sources: <a class="text-link" href="https://apps.irs.gov/app/understandingTaxes/hows/tax_tutorials/mod01/tt_mod01_04.jsp" rel="noopener" target="_blank">Internal Revenue Service payroll-tax tutorial</a> and <a class="text-link" href="https://www.bls.gov/news.release/ecec.nr0.htm" rel="noopener" target="_blank">U.S. Bureau of Labor Statistics, Employer Costs for Employee Compensation</a>.</p></div>
+
+          p = Path('index.html')
+          s = p.read_text()
+
+          # Locked v7 tagline and pilot framing.
+          s = s.replace(
+              'Raw File Rescue is currently accepting the <strong>first 5 qualified inquiries</strong> for its introductory pilot.',
+              'Raw File Rescue is currently accepting a <strong>limited number of qualified pilot customers</strong>, with an initial goal of completing and measuring 5 paid pilot projects.'
+          )
+          s = s.replace(
+              '<p>Hard-to-find files. Paper piles. Organized information at your fingertips.</p>',
+              '<p>From hard-to-find files and messy piles to an organized digital archive.</p>'
+          )
+
+          # Rebuild problem-first capability examples. Paper and mixed backlogs appear before AI work.
+          services = '''<section class="section alt" id="services"><div class="container"><div class="heading"><h2>How Raw File Rescue Helps</h2><div class="accent-line"></div><p>Tell me what's getting in your way. You do not have to diagnose the service yourself — the solution comes second.</p></div><div class="cards">
+          <article class="card"><h3>Tired of hunting for the same file?</h3><span class="note">Digital File Rescue</span><p>Raw File Rescue can sort through the backlog and leave you with a system that makes sense, so you know where to look next time.</p><a href="assets/examples/personal/08.27.26.v3_personal_drive_before_after_final.webp" rel="noopener" target="_blank">View demonstration →</a></article>
+          <article class="card"><h3>Business records getting harder to keep up with?</h3><span class="note">Digital File Rescue — Business Records</span><p>Invoices, receipts, statements, and project files can be brought into a practical system that's easier to use and maintain. Business cleanup is one use of Digital File Rescue, not a separate fixed package.</p><a href="assets/examples/business/08.27.26.v3_pepper_riot_drive_before_after_final.webp" rel="noopener" target="_blank">View demonstration →</a></article>
+          <article class="card"><h3>Paper piling up?</h3><span class="note">Paper-to-Digital</span><p>Already-sorted paper can be scanned, OCR'd where appropriate, named, and organized on site while the originals stay with you. During the pilot, each on-site paper visit is capped at one file box or two bags.</p><a href="assets/examples/personal/08.27.26.v3_personal_mixed_scanning_before_after_final.webp" rel="noopener" target="_blank">View demonstration →</a></article>
+          <article class="card"><h3>Paper pile not sorted yet?</h3><span class="note">Paper Rescue — Sort + Scan + Organize</span><p>For an unsorted paper backlog, we agree on a physical structure first; then I sort, scan, organize the digital archive, and restore the originals to the agreed arrangement before I leave.</p><a href="assets/examples/personal/08.27.26.v3_personal_mixed_scanning_before_after_final.webp" rel="noopener" target="_blank">View demonstration →</a></article>
+          <article class="card"><h3>Paper and digital files mixed together?</h3><span class="note">Mixed Backlog Rescue</span><p>Bring related paper and digital material together into one understandable information structure instead of keeping separate piles that do not connect. Any paper component stays on site.</p><a href="assets/examples/personal/08.27.26.v3_personal_mixed_scanning_before_after_final.webp" rel="noopener" target="_blank">View demonstration →</a></article>
+          <article class="card"><h3>Need specific information pulled out of a pile?</h3><span class="note">Data Extraction</span><p>Turn customer-selected information buried across files and documents into a usable table, spreadsheet, inventory, list, or structured record, with human quality control.</p><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Data_Extraction_Sample.xlsx" rel="noopener" target="_blank">See information pulled into a usable spreadsheet →</a></article>
+          <article class="card"><h3>Got useful work buried in a long AI chat?</h3><span class="note">Full Chat-to-Document</span><p>Turn the conversation into a standalone working document that preserves useful decisions, structure, chronology, and context without requiring you to reread the original chat.</p><div class="demo-links"><strong>See this demonstration:</strong><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Raw_Chat_1_Before_Sample.pdf" rel="noopener" target="_blank">Original chat →</a><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Chat_Summary_Sample.pdf" rel="noopener" target="_blank">Summary →</a><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Full_Chat_to_Document_Sample.pdf" rel="noopener" target="_blank">Finished document →</a></div></article>
+          <article class="card"><h3>Several chats or documents belong to one project?</h3><span class="note">Multi-Chat / Project Consolidation</span><p>Consolidate related sources into one organized project record, reconcile changed decisions, preserve genuine conflicts for review, and reduce repetition.</p><a href="samples/pepper-riot/08.23.26_RFR_Pepper_Riot_Multi_Chat_Project_Consolidation_Sample.pdf" rel="noopener" target="_blank">View demonstration →</a></article>
+          <article class="card wide"><h3>Bookmarks impossible to find anything in?</h3><span class="note">Bookmark &amp; Saved-Link Cleanup</span><p>Turn an overloaded bookmark collection into a manageable set of links you can actually find and use.</p><p style="margin-top:12px;color:var(--navy);font-weight:700">For remote projects, you send an exported bookmark file — no browser password or account access needed. Anything that looks outdated, duplicated, or broken is flagged for your review rather than deleted automatically.</p><a href="#diy-file-rescue">See the cleanup approach →</a></article>
+          <article class="card wide"><h3>Looking for deleted-file or failed-drive recovery?</h3><p>That's a different service. Raw File Rescue organizes material you can already access; Raw File Rescue does not provide forensic recovery, failed-drive recovery, or hardware repair.</p></article>
           </div></div></section>'''
-          s,n=re.subn(r'<section class="section" id="pricing">.*?</section>',new,s,count=1,flags=re.S)
-          if n!=1: raise SystemExit('pricing section not found')
-          css='''.pricing-mobile-first{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);grid-template-areas:"plan consult" "paid rate" "overages rate" "employee employee";gap:24px;align-items:start}.pricing-mobile-first .cost{margin-top:0}.pricing-consult{grid-area:consult;margin:0}.pricing-rate{grid-area:rate}.pricing-plan{grid-area:plan}.pricing-paid{grid-area:paid}.pricing-overages{grid-area:overages}.pricing-employee{grid-area:employee}@media(max-width:980px){.pricing-mobile-first{grid-template-columns:1fr;grid-template-areas:"consult" "rate" "plan" "paid" "overages" "employee";gap:18px}.pricing-mobile-first>*{min-width:0}.pricing-mobile-first .price-card,.pricing-mobile-first .cost,.pricing-mobile-first .consult{width:100%;max-width:100%}}@media(max-width:680px){#pricing .section{padding-left:0;padding-right:0}.pricing-mobile-first{gap:14px}.pricing-mobile-first .cost,.pricing-mobile-first .consult,.pricing-mobile-first .price-card{padding:22px 20px}.pricing-mobile-first .price{font-size:2.75rem}.pricing-mobile-first h3{line-height:1.25}.pricing-mobile-first .checks li{overflow-wrap:anywhere}}'''
-          s=s.replace('</style>',css+'</style>',1)
-          s=s.replace('<li><a href="#examples">Demonstrations</a></li>','<li><a href="#services">Demonstrations</a></li>')
+          s, n = re.subn(r'<section class="section alt" id="services">.*?</section>', services, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('services section not found')
+
+          # Rebuild pricing to current v7 pilot terms.
+          pricing = '''<section class="section" id="pricing"><div class="container"><div class="heading"><h2>Pricing</h2><div class="accent-line"></div><p>Introductory pilot pricing. You see the written plan, expected cost, and project ceiling before paid work begins.</p></div><div class="pricing-mobile-first">
+          <div class="consult pricing-consult"><h3>Complimentary Consultation</h3><p><strong>No charge before you approve the written plan and paid work begins.</strong></p><ul class="checks"><li>Initial inquiry and fit check</li><li>Talk through what is causing the problem</li><li>Qualification and risk review</li><li>Prepare the written solution, estimate, and project ceiling</li></ul></div>
+          <div class="price-card pricing-rate"><div class="label">Introductory Paid-Pilot Rate</div><div class="price">$20 <small>/ hour — first 3 billable hours</small></div><p><strong>After the first 3 billable hours of a project: $25/hour.</strong></p><p>Approved paid work is billed in <strong>15-minute increments</strong>. Qualification, risk review, solution design, and the initial written quote are complimentary.</p><p><strong>Paid time is recorded through Clockify; an itemized time report is available on request.</strong></p></div>
+          <div class="cost pricing-plan"><h3>Know the Plan Before Paid Work Begins</h3><p>Before any paid work starts, you receive a written plan that includes:</p><ul class="checks"><li><strong>What I’ll do</strong></li><li><strong>What you’ll receive</strong></li><li><strong>What is included and excluded</strong></li><li><strong>Expected labor time and cost</strong></li><li><strong>Maximum project cost / authorized ceiling</strong></li><li><strong>Any approved unusual travel or outside expense</strong></li></ul><p><strong>I stop and get your approval before going over the authorized ceiling or materially expanding the scope.</strong></p></div>
+          <div class="cost pricing-paid"><h3>Paid work might include</h3><ul class="checks"><li>Getting a scattered digital backlog into a usable system</li><li>Making business or personal records easier to find and keep up with</li><li>Sorting, scanning, OCR, naming, and organizing paper on site</li><li>Combining paper and digital material into one coherent structure</li><li>Turning AI chats into structured records or standalone working documents</li><li>Pulling selected information into a table, spreadsheet, inventory, or structured record</li><li>Quality control, delivery preparation, and one correction round within the accepted scope</li></ul></div>
+          <div class="cost pricing-overages"><h3>No Surprise Overages</h3><p>Your written plan includes an expected labor cost and a <strong>maximum project cost / authorized ceiling</strong>. I do not exceed that ceiling without your approval.</p><p><strong>Routine local travel is normally absorbed during the pilot.</strong> If a project creates an unusual customer-specific travel expense or another third-party cost, it is disclosed and approved in writing before authorization. No surprise travel charge.</p><p>A scope change also requires approval when the real job materially adds files, boxes, chats, source material, a new access method, a new deliverable, or another significant type of work.</p></div>
+          <div class="cost pricing-employee"><h3>Why the rate is introductory</h3><p>The $20/$25 structure is a paid-pilot validation rate, not a permanent price promise. After 5 measured paid customers, Raw File Rescue will use actual demand, job time, nonbillable effort, corrections, travel, and customer results to decide what should be repriced, packaged, renamed, expanded, or dropped.</p></div>
+          </div></div></section>'''
+          s, n = re.subn(r'<section class="section" id="pricing">.*?</section>', pricing, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('pricing section not found')
+
+          # Current insurance gate: E&O required before paid operations; GL remains open.
+          s = s.replace(
+              '<strong>Liability &amp; Professional Coverage</strong><p>General liability and professional liability (E&amp;O) insurance will be in place before any customer work begins. <strong>Proof of coverage will be provided before work starts.</strong></p>',
+              '<strong>Professional Liability Coverage</strong><p>Appropriate professional liability (E&amp;O) coverage will be in place before paid customer work begins. <strong>Proof of coverage will be available before work starts.</strong></p>'
+          )
+
+          # Make the seven-day rule match the current correction/dispute exception.
+          s = s.replace(
+              'Temporary copies I make while working are ordinarily deleted seven calendar days after your finished work is sent or made available, and I record that the deletion was completed.',
+              'Temporary copies I make while working are ordinarily deleted seven calendar days after final delivery. If you report a correction, discrepancy, or dispute that requires those working files before scheduled deletion, deletion of the relevant material is paused while it is reviewed.'
+          )
+          s = s.replace(
+              'Temporary copies I make while working are ordinarily deleted seven days after your finished work is sent or made available. I record when that deletion is completed.',
+              'Temporary copies I make while working are ordinarily deleted seven calendar days after final delivery. A timely correction, discrepancy, or dispute that requires those working files pauses deletion of the relevant material while it is reviewed.'
+          )
+
           p.write_text(s)
           PY
-      - name: Commit
+      - name: Commit website sync
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Rebuild pricing section for responsive mobile layout"
+          git diff --cached --quiet || git commit -m "Align website with RFR v7 playbook"
           git push
