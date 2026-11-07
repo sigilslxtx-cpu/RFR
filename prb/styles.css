@@ -13,3 +13,5 @@
 .timer-started{font-size:11px;line-height:1.35;color:#dce9ed;white-space:normal;text-align:center}
 .sidebar-foot #appBuild{display:block;margin-top:4px;color:#a9c2cd;font-size:10px}
 @media(max-width:640px){.timer-clock{min-width:130px}.timer-started{font-size:10px}}
+
+.timer-build{display:inline-block;color:#b9d5dc;font-size:10px;white-space:nowrap;opacity:.85}
