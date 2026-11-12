@@ -15,3 +15,5 @@
 @media(max-width:640px){.timer-clock{min-width:130px}.timer-started{font-size:10px}}
 
 .timer-build{display:inline-block;color:#b9d5dc;font-size:10px;white-space:nowrap;opacity:.85}
+
+.prb-private-upgrade{padding:1rem;background:#edf5f1;border:1px solid #c6d9d0;margin:.5rem 1rem}.prb-private-upgrade p{margin:.5rem 0 0}.app-rights{padding:1rem}.app-rights a{text-decoration:underline}
