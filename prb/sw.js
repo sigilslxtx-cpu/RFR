@@ -1,4 +1,4 @@
-const CACHE='prb-research-v1.5.0-rights-1';
+const CACHE='prb-research-v1.5.0-rights-2';
 const FILES=['./','./index.html','./app.js','./styles.css','./manifest.webmanifest','./icon-192.png','./icon.svg','./rights.html'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('prb-research-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
